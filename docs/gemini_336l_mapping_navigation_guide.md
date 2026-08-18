@@ -34,16 +34,16 @@
 
 ```bash
 cd /root/workspace/Lidar_nav2_ws
-./scripts/build_rough_overlay.sh
+./scripts/build.sh
 ```
 
 编译成功后应生成：
 
 ```bash
-install_rough/setup.bash
+install/setup.bash
 ```
 
-如果提示找不到 `install_rough/setup.bash`，说明还没有完成 overlay 编译。
+如果提示找不到 `install/setup.bash`，说明还没有完成工作空间编译。
 
 ### 2.2 修改粗糙地形参数
 
@@ -288,14 +288,13 @@ colcon build --packages-select orbbec_camera_msgs orbbec_description orbbec_came
 
 ```bash
 cd /root/workspace/Lidar_nav2_ws
-./scripts/build_rough_overlay.sh
+./scripts/build.sh
 ```
 
 编译完成后 source：
 
 ```bash
 source install/setup.bash
-source install_rough/setup.bash
 ```
 
 ### 3.3 识别两个 Gemini 336L
@@ -305,7 +304,6 @@ source install_rough/setup.bash
 ```bash
 cd /root/workspace/Lidar_nav2_ws
 source install/setup.bash
-source install_rough/setup.bash
 ros2 run orbbec_camera list_devices_node
 ```
 
@@ -591,7 +589,7 @@ max_drop_depth_m: 0.04
 Gazebo：
 
 ```bash
-./scripts/build_rough_overlay.sh
+./scripts/build.sh
 ./scripts/mapping_rough_sim.sh
 # 建图完成后保存地图
 ./scripts/save_map.sh
@@ -602,11 +600,10 @@ Gazebo：
 
 ```bash
 # 1. 编译
-./scripts/build_rough_overlay.sh
+./scripts/build.sh
 
 # 2. 检查相机
 source install/setup.bash
-source install_rough/setup.bash
 ros2 run orbbec_camera list_devices_node
 lsusb -t
 

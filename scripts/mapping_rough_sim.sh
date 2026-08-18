@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(dirname -- "$SCRIPT_DIR")"
 cd "$WORKSPACE_ROOT" || exit 1
 
-if [ ! -f "$WORKSPACE_ROOT/install_rough/setup.bash" ]; then
-  echo "Missing install_rough overlay. Run: ./scripts/build_rough_overlay.sh" >&2
+if [ ! -f "$WORKSPACE_ROOT/install/setup.bash" ]; then
+  echo "Missing install/setup.bash. Run: ./scripts/build.sh" >&2
   exit 1
 fi
 
@@ -98,11 +98,11 @@ run_task() {
   local cmd="$2"
 
   if [ "$USE_TERMINAL" -eq 1 ]; then
-    gnome-terminal --title="$title" -- bash -lc "cd '$WORKSPACE_ROOT'; set +u; source install/setup.bash; [ -f install_rough/setup.bash ] && source install_rough/setup.bash; set -u; $cmd; exec bash"
+    gnome-terminal --title="$title" -- bash -lc "cd '$WORKSPACE_ROOT'; set +u; source install/setup.bash; set -u; $cmd; exec bash"
   else
     local logfile
     logfile="$LOG_DIR/$(echo "$title" | tr ' /' '__').log"
-    setsid bash -lc "cd '$WORKSPACE_ROOT'; set +u; source install/setup.bash; [ -f install_rough/setup.bash ] && source install_rough/setup.bash; set -u; $cmd" >"$logfile" 2>&1 &
+    setsid bash -lc "cd '$WORKSPACE_ROOT'; set +u; source install/setup.bash; set -u; $cmd" >"$logfile" 2>&1 &
     local pgid=$!
     PGIDS+=("$pgid")
     echo "$pgid" >> "$PID_FILE"
