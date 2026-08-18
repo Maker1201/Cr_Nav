@@ -2,17 +2,19 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
-
+    rviz = LaunchConfiguration('rviz')
 
     # 动态获取 get_urdf 包在 install 目录下的绝对路径
     pkg_share_path = get_package_share_directory('get_urdf')
 
     rviz_config_path = os.path.join(pkg_share_path, 'rviz', 'nav2_new.rviz')
 
-    world_file_path = os.path.join(pkg_share_path, 'worlds', 'test_world.world')
+    world_file_path = os.path.join(pkg_share_path, 'worlds', '3d.world')
 
     # 拼接出准确的 URDF 路径
     urdf_file_path = os.path.join(pkg_share_path, 'model', 'simple_car.urdf')
@@ -22,6 +24,11 @@ def generate_launch_description():
         robot_desc = infp.read()
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'rviz', default_value='true',
+            description='Start the get_urdf RViz window'
+        ),
+
         # 3. 启动 Gazebo 仿真引擎
         ExecuteProcess(
             cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', world_file_path],
@@ -49,7 +56,8 @@ def generate_launch_description():
             executable="rviz2",
             name="rviz2",
             output="screen",
-            arguments=["-d", rviz_config_path], 
+            arguments=["-d", rviz_config_path],
+            condition=IfCondition(rviz),
         )
         
 

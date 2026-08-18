@@ -36,7 +36,7 @@ DIVIDER     = '#38383a'
 WIN_W, WIN_H = 780, 640
 
 
-def rounded_rect(canvas, x, y, w, h, r, fill, outline=''):
+def rounded_rect(canvas, x, y, w, h, r, fill, outline='', **kwargs):
     points = [
         x + r, y, x + r, y, x + w - r, y, x + w - r, y,
         x + w, y, x + w, y + r, x + w, y + r, x + w, y + h - r,
@@ -44,7 +44,7 @@ def rounded_rect(canvas, x, y, w, h, r, fill, outline=''):
         x + r, y + h, x + r, y + h, x, y + h, x, y + h - r,
         x, y + r, x, y + r, x, y,
     ]
-    canvas.create_polygon(points, fill=fill, outline=outline, smooth=True)
+    canvas.create_polygon(points, fill=fill, outline=outline, smooth=True, **kwargs)
 
 
 def generate_blur_bg(w, h):

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(bbs3d)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 ## find thirdparty/Eigen or Eigen3 package
 option(USE_THIRDPARTY_EIGEN "Include thirdparty eigen" OFF)
 file(GLOB entries "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/Eigen/*")
@@ -22,6 +26,8 @@ endif()
 ## find CUDA
 option(BUILD_CUDA "Build GPU ver" ON)
 if (BUILD_CUDA)
+  set(CUDA_HOST_COMPILER /usr/bin/g++-10 CACHE FILEPATH "CUDA host compiler" FORCE)
+  list(APPEND CUDA_NVCC_FLAGS --expt-relaxed-constexpr --std=c++14)
   find_package(CUDA REQUIRED)
   include_directories(${CUDA_INCLUDE_DIRS})
   link_directories(${CUDA_LIBRARY_DIRS})

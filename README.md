@@ -1,8 +1,6 @@
 # Lidar_nav2_ws
 
-[English Documentation](./README_EN.md)
-
-基于 ROS 2 的 3D LiDAR 自主导航系统
+A ROS 2-based 3D LiDAR autonomous navigation system
 
 [![ROS2](https://img.shields.io/badge/ROS2-Humble-22313F?logo=ros)](https://docs.ros.org/en/humble/)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04-E95420?logo=ubuntu)](https://releases.ubuntu.com/22.04/)
@@ -13,31 +11,31 @@
   <img src="docs/KISS%20show_2.gif" alt="KISS demo 2" width="48%">
 </p>
 
-**Nav2_3D** 是一个面向四轮滑移转向机器人的 ROS 2 Humble 导航工作空间。系统以 Livox MID-360 3D LiDAR 和 IMU 为核心传感器，集成 LiDAR-Inertial Odometry (LIO) 里程计、3D 点云重定位和 Nav2 导航框架，支持 **Gazebo 仿真**与**实机部署**，仅需切换启动脚本即可在两种模式间无缝切换。
+**Nav2_3D** is a ROS 2 Humble navigation workspace for four-wheel skid-steering robots. The system uses a Livox MID-360 3D LiDAR and IMU as its core sensors, integrating LiDAR-Inertial Odometry (LIO), 3D point-cloud relocalization, and the Nav2 navigation framework. It supports both **Gazebo simulation** and **real-robot deployment**, and the two modes can be switched by changing only the launch scripts.
 
-核心特性：
+Key features:
 
-- **3D 重定位** — 基于 small_gicp + KISS-Matcher 的全局重定位
-- **双 LIO 后端** — FAST-LIO2 与 Point-LIO 可灵活切换
-- **仿真-实机一致性** — 同一套导航栈，仅传感器驱动和 URDF 不同
-- **完整工具链** — 构建、建图、保存地图、导航全流程脚本化
+- **3D relocalization** - Global relocalization based on small_gicp and KISS-Matcher
+- **Dual LIO backends** - Flexible switching between FAST-LIO2 and Point-LIO
+- **Simulation-to-real consistency** - The same navigation stack is used; only the sensor driver and URDF differ
+- **Complete toolchain** - Scripted workflow for build, mapping, map saving, and navigation
 
-数据管线：
+Data pipeline:
 
-> LiDAR/IMU &rarr; LIO (FAST-LIO 或 Point-LIO) &rarr; TF 桥接 (`lio_interface`) &rarr; odom TF &amp; `/registered_scan` (`sensor_scan_generation`) &rarr; 3D&rarr;2D 切片 (`pointcloud_to_laserscan`) &rarr; 重定位 (`small_gicp_relocalization` 或 `global_relocalization_kiss_matcher`) &rarr; Nav2 (DWB + Navfn)
+> LiDAR/IMU &rarr; LIO (FAST-LIO or Point-LIO) &rarr; TF bridge (`lio_interface`) &rarr; odom TF and `/registered_scan` (`sensor_scan_generation`) &rarr; 3D-to-2D slicing (`pointcloud_to_laserscan`) &rarr; relocalization (`small_gicp_relocalization` or `global_relocalization_kiss_matcher`) &rarr; Nav2 (DWB + Navfn)
 
-TF 坐标树：**`map` &rarr; `odom` &rarr; `base_footprint` &rarr; `chassis` &rarr; `livox_frame`**
+TF tree: **`map` &rarr; `odom` &rarr; `base_footprint` &rarr; `chassis` &rarr; `livox_frame`**
 
 ---
 
-## 1. 环境要求
+## 1. Requirements
 
-- **操作系统**：Ubuntu 22.04
-- **ROS 2**：Humble Hawksbill
-- **Gazebo**：Fortress
-- **Livox-SDK2**：实机模式需要；已预编译于 `src/livox_ros_driver2/3rdparty/`，支持 amd64/arm64
+- **Operating system**: Ubuntu 22.04
+- **ROS 2**: Humble Hawksbill
+- **Gazebo**: Fortress
+- **Livox-SDK2**: Required for real-robot mode; prebuilt under `src/livox_ros_driver2/3rdparty/`, with amd64/arm64 support
 
-## 2. 构建
+## 2. Build
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -45,17 +43,17 @@ cd scripts
 ./build.sh
 ```
 
-构建脚本等价于：
+The build script is equivalent to:
 
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
 
-每次修改源代码后需重新构建。启动任何节点前确保已执行 `source install/setup.bash`。
+Rebuild after every source-code change. Before launching any node, make sure `source install/setup.bash` has been executed.
 
-## 3. 快速开始
+## 3. Quick Start
 
-### 3.1 仿真建图
+### 3.1 Simulation Mapping
 
 ```bash
 source install/setup.bash
@@ -63,218 +61,218 @@ cd scripts
 ./mapping_sim.sh
 ```
 
-此命令启动 Gazebo、FAST-LIO、SLAM Toolbox、Nav2 和 GUI 遥控窗口。使用 WASD 键驾驶机器人遍历环境。覆盖足够面积后保存地图：
+This command starts Gazebo, FAST-LIO, SLAM Toolbox, Nav2, and the GUI teleoperation window. Use the WASD keys to drive the robot through the environment. After enough area has been covered, save the maps:
 
 ```bash
-./save_map.sh       # 保存 2D 占用栅格地图至 src/me_nav2_bringup/map/
-./save_pcd.sh       # 保存 3D 点云，手动移至 src/me_nav2_bringup/pcd/
+./save_map.sh       # Save the 2D occupancy grid map to src/me_nav2_bringup/map/
+./save_pcd.sh       # Save the 3D point cloud, then move it manually to src/me_nav2_bringup/pcd/
 ```
 
-### 3.2 仿真导航
+### 3.2 Simulation Navigation
 
-修改以下文件，指向新保存的地图和点云：
+Edit the following files so they point to the newly saved map and point cloud:
 
-- `src/me_nav2_bringup/launch/my_nav2_launch.py` — 设置 `map_yaml_file`
-- `src/registration/small_gicp_relocalization/launch/small_gicp_relocalization_launch.py` — 设置 `prior_pcd_file`
+- `src/me_nav2_bringup/launch/my_nav2_launch.py` - Set `map_yaml_file`
+- `src/registration/small_gicp_relocalization/launch/small_gicp_relocalization_launch.py` - Set `prior_pcd_file`
 
-然后启动：
+Then start:
 
 ```bash
 cd scripts
 ./nav2_sim.sh
 ```
 
-在 RViz 中使用 **"Nav2 Goal"** 发送导航目标。
+Use **"Nav2 Goal"** in RViz to send a navigation goal.
 
-### 3.3 实机建图
+### 3.3 Real-Robot Mapping
 
 ```bash
 cd scripts
 ./mapping_real.sh
 ```
 
-将 Gazebo 替换为 Livox MID-360 硬件驱动 (`livox_ros_driver2`) 和实机 URDF (`gld_robot_description`)。
+This replaces Gazebo with the Livox MID-360 hardware driver (`livox_ros_driver2`) and the real-robot URDF (`gld_robot_description`).
 
-### 3.4 实机导航
+### 3.4 Real-Robot Navigation
 
 ```bash
 cd scripts
 ./nav2_real.sh
 ```
 
-包含 `small_gicp_relocalization`，基于先验 PCD 地图进行重定位。
+This includes `small_gicp_relocalization` and performs relocalization against a prior PCD map.
 
-### 3.5 全局重定位：三种方案
+### 3.5 Global Relocalization: Three Options
 
-系统提供三种基于先验 PCD 地图的 3D 重定位方案：
+The system provides three 3D relocalization options based on a prior PCD map:
 
-- **KISS-Matcher + small_gicp**：适合机器人初始位姿未知、**"2D Pose Estimate"** 给不准，或纯 small_gicp 因初值偏差过大难以收敛的场景。`global_relocalization_kiss_matcher` 会先累计 `/registered_scan` 做全局粗配准，初始化成功后再切换到 small_gicp 连续跟踪，并持续发布 `map` &rarr; `odom`。
-- **纯 small_gicp**：适合机器人初始位姿大致已知的场景。默认在机器在 (0,0,0) 附近开始收敛，可在 small_gicp_relocalization 的 launch 中自定义开机点位或者在 rviz 中 **"2D Pose Estimate"** 给定初始位姿，再由 `small_gicp_relocalization` 配准到先验地图，收敛更快、流程更简单，持续发布 `map` &rarr; `odom`。
-- **ICP 配准**：适用场景和纯 small_gicp 类似，不过只有开机那一刻进行重定位，后续不再维护 `map` &rarr; `odom`。
+- **KISS-Matcher + small_gicp**: Suitable when the robot's initial pose is unknown, **"2D Pose Estimate"** is inaccurate, or pure small_gicp cannot converge because the initial guess is too far from the true pose. `global_relocalization_kiss_matcher` first accumulates `/registered_scan` for global coarse registration. After successful initialization, it switches to small_gicp continuous tracking and continuously publishes `map` &rarr; `odom`.
+- **Pure small_gicp**: Suitable when the robot's approximate initial pose is known. By default, it starts converging near (0,0,0). You can customize the startup pose in the `small_gicp_relocalization` launch file or provide an initial pose in RViz with **"2D Pose Estimate"**. `small_gicp_relocalization` then registers against the prior map, converges faster, keeps the workflow simpler, and continuously publishes `map` &rarr; `odom`.
+- **ICP registration**: Similar use case to pure small_gicp, but relocalization is performed only once at startup. It does not continue maintaining `map` &rarr; `odom`.
 
-使用前先确认先验点云路径正确：
+Before use, confirm that the prior point-cloud path is correct:
 
 ```bash
 vim src/registration/small_gicp_relocalization/launch/small_gicp_relocalization_launch.py
 vim src/registration/global_relocalization_kiss_matcher/launch/global_kiss_matcher_relocalization_launch.py
 ```
 
-重点检查：
+Check the following carefully:
 
-- `prior_pcd_file`：先验 PCD 地图路径，例如 `src/me_nav2_bringup/pcd/*.pcd`
-- `input_cloud_topic`：默认 `/registered_scan`
-- `map_frame` / `odom_frame`：默认 `map` / `odom`
-- `base_frame` / `robot_base_frame` / `lidar_frame`：默认 `base_footprint` / `base_footprint` / `livox_frame`
+- `prior_pcd_file`: Prior PCD map path, for example `src/me_nav2_bringup/pcd/*.pcd`
+- `input_cloud_topic`: Default is `/registered_scan`
+- `map_frame` / `odom_frame`: Default is `map` / `odom`
+- `base_frame` / `robot_base_frame` / `lidar_frame`: Default is `base_footprint` / `base_footprint` / `livox_frame`
 
-启动时二选一即可，同一时间只能有一个节点发布 `map` &rarr; `odom`。
+Choose only one relocalization node at launch time. Only one node may publish `map` &rarr; `odom` at the same time.
 
-纯 small_gicp 方案通常已集成在导航脚本中：
+The pure small_gicp option is usually already integrated into the navigation scripts:
 
 ```bash
 source install/setup.bash
 cd scripts
 ./nav2_sim.sh
-# 或
+# or
 ./nav2_real.sh
 ```
 
-如果要使用 KISS-Matcher + small_gicp，请先确保 `scripts/nav2_sim.sh` / `scripts/nav2_real.sh` 中没有同时启动 `small_gicp_relocalization`，然后单独启动全局重定位节点：
+To use KISS-Matcher + small_gicp, first make sure `scripts/nav2_sim.sh` / `scripts/nav2_real.sh` does not also start `small_gicp_relocalization`, then start the global relocalization node separately:
 
 ```bash
 source install/setup.bash
 cd scripts
 
-# 1. 启动仿真或实机导航主流程
+# 1. Start the main simulation or real-robot navigation workflow
 ./nav2_sim.sh
-# 或
+# or
 ./nav2_real.sh
 
-# 2. 启动 KISS-Matcher 全局重定位节点
+# 2. Start the KISS-Matcher global relocalization node
 ros2 launch global_relocalization_kiss_matcher global_kiss_matcher_relocalization_launch.py
 ```
 
-判断是否成功：
+Check whether it succeeded:
 
 ```bash
 ros2 run tf2_ros tf2_echo map odom
 ros2 topic hz /registered_scan
 ```
 
-日志中出现 `KISSMatcher initialization succeeded` 表示全局初始化成功，随后会进入 small_gicp 连续跟踪阶段。若持续出现 `KISSMatcher initialization failed`，通常是当前累计点云与先验地图重叠不足、点云太稀疏，或 `prior_pcd_file` / 坐标系设置不匹配。
+When `KISSMatcher initialization succeeded` appears in the log, global initialization has succeeded and the node will enter the small_gicp continuous-tracking stage. If `KISSMatcher initialization failed` keeps appearing, common causes include insufficient overlap between the accumulated local cloud and the prior map, sparse point clouds, or mismatched `prior_pcd_file` / frame settings.
 
-## 4. 功能包
+## 4. Packages
 
-工作空间包含 **19 个 ROS 2 功能包**，位于 `src/` 下：
+The workspace contains **19 ROS 2 packages** under `src/`:
 
-**里程计与定位** (`src/localization/`)
+**Odometry and Localization** (`src/localization/`)
 
-- `FAST_LIO` — FAST-LIO2：基于 ikd-Tree 的紧耦合 LiDAR-IMU 里程计，100 Hz+
-- `point_lio` — Point-LIO：高带宽里程计 (4&ndash;8 kHz)，抗 IMU 饱和
-- `Sophus` — 李群库 (SO(3)/SE(3))，LIO 数学依赖
+- `FAST_LIO` - FAST-LIO2: Tightly coupled LiDAR-IMU odometry based on ikd-Tree, 100 Hz+
+- `point_lio` - Point-LIO: High-bandwidth odometry (4-8 kHz), robust to IMU saturation
+- `Sophus` - Lie group library (SO(3)/SE(3)), math dependency for LIO
 
-**配准与重定位** (`src/registration/`)
+**Registration and Relocalization** (`src/registration/`)
 
-- `small_gicp_relocalization` — 已知大概开机位姿重定位方案：基于 small_gicp 的 3D 点云配准
-- `global_relocalization_kiss_matcher` — KISS-Matcher + small_gicp 全局重定位：无初值粗配准初始化，随后用 GICP 持续跟踪 `map` &rarr; `odom`
-- `KISS-Matcher` — ICRA 2025：快速全局点云配准 (FPFH + TEASER++ + small_gicp)
+- `small_gicp_relocalization` - Relocalization when the approximate startup pose is known: 3D point-cloud registration based on small_gicp
+- `global_relocalization_kiss_matcher` - KISS-Matcher + small_gicp global relocalization: coarse registration without an initial guess, followed by GICP continuous tracking of `map` &rarr; `odom`
+- `KISS-Matcher` - ICRA 2025: Fast global point-cloud registration (FPFH + TEASER++ + small_gicp)
 
-**传感器与桥接**
+**Sensors and Bridging**
 
-- `livox_ros_driver2` — Livox MID-360 驱动，同时发布 CustomMsg 和 PointCloud2
-- `lio_interface` — TF 桥接：LIO 内部坐标系转标准 `odom` 坐标系
-- `sensor_scan_generation` — 发布 `odom` &rarr; `base_footprint` TF、`/odom` 和 `/registered_scan`
-- `ign_sim_pointcloud_tool` — PointCloud2 转 Velodyne 格式，Point-LIO 仿真必需
+- `livox_ros_driver2` - Livox MID-360 driver, publishing both CustomMsg and PointCloud2
+- `lio_interface` - TF bridge: Converts LIO internal frames to the standard `odom` frame
+- `sensor_scan_generation` - Publishes the `odom` &rarr; `base_footprint` TF, `/odom`, and `/registered_scan`
+- `ign_sim_pointcloud_tool` - Converts PointCloud2 to Velodyne format, required for Point-LIO simulation
 
-**导航**
+**Navigation**
 
-- `me_nav2_bringup` — Nav2 集成：启动文件、参数配置、地图、PCD、RViz 配置
-- `gui_teleop` — tkinter GUI 遥控，持速度调节和紧急停止
+- `me_nav2_bringup` - Nav2 integration: launch files, parameter configuration, maps, PCD files, and RViz configuration
+- `gui_teleop` - tkinter GUI teleoperation with speed adjustment and emergency stop
 
-**仿真与描述**
+**Simulation and Description**
 
-- `get_urdf` — 四轮滑移转向机器人 URDF、Gazebo 世界、RViz 配置
-- `gld_robot_description` — 实机 URDF（含 RealSense D456/D405、Orbbec Gemini 相机）
-- `livox_laser_simulation_RO2` — Livox LiDAR Gazebo 仿真插件
+- `get_urdf` - Four-wheel skid-steering robot URDF, Gazebo worlds, and RViz configuration
+- `gld_robot_description` - Real-robot URDF, including RealSense D456/D405 and Orbbec Gemini cameras
+- `livox_laser_simulation_RO2` - Livox LiDAR Gazebo simulation plugin
 
-**工具**
+**Tools**
 
-- `pcd2pgm-master` — PCD 点云转 2D 占用栅格地图离线工具
+- `pcd2pgm-master` - Offline tool for converting PCD point clouds to 2D occupancy grid maps
 
-## 5. 配置说明
+## 5. Configuration
 
-### 5.1 关键配置文件
+### 5.1 Key Configuration Files
 
-**导航配置**
-- `me_nav2_bringup/config/nav2_params.yaml` — Nav2 参数
-- `me_nav2_bringup/config/slam_toolbox_params.yaml` — SLAM Toolbox 在线建图参数
-- `me_nav2_bringup/config/Pointcloud2d_3d.yaml` — 3D→2D 切片高度和角分辨率
+**Navigation configuration**
+- `me_nav2_bringup/config/nav2_params.yaml` - Nav2 parameters
+- `me_nav2_bringup/config/slam_toolbox_params.yaml` - SLAM Toolbox online-mapping parameters
+- `me_nav2_bringup/config/Pointcloud2d_3d.yaml` - 3D-to-2D slicing height and angular resolution
 
-**LIO 配置**
-- `localization/FAST_LIO/config/mid360.yaml` — FAST-LIO 参数
-- `localization/point_lio/config/mid360_sim.yaml` — Point-LIO 仿真参数
-- `localization/point_lio/config/mid360_real.yaml` — Point-LIO 实机参数
+**LIO configuration**
+- `localization/FAST_LIO/config/mid360.yaml` - FAST-LIO parameters
+- `localization/point_lio/config/mid360_sim.yaml` - Point-LIO simulation parameters
+- `localization/point_lio/config/mid360_real.yaml` - Point-LIO real-robot parameters
 
-**传感器配置**
-- `livox_ros_driver2/config/MID360_config.json` — LiDAR 网络配置
+**Sensor configuration**
+- `livox_ros_driver2/config/MID360_config.json` - LiDAR network configuration
 
-**配准配置**
-- `registration/icp_registration/config/icp.yaml` — ICP 配准参数
-- `registration/global_relocalization_kiss_matcher/launch/global_kiss_matcher_relocalization_launch.py` — KISS-Matcher 全局重定位启动参数
-- `registration/global_relocalization_kiss_matcher/config/alignment_config.yaml` — KISS-Matcher 帧间/全局配准示例参数
+**Registration configuration**
+- `registration/icp_registration/config/icp.yaml` - ICP registration parameters
+- `registration/global_relocalization_kiss_matcher/launch/global_kiss_matcher_relocalization_launch.py` - KISS-Matcher global relocalization launch parameters
+- `registration/global_relocalization_kiss_matcher/config/alignment_config.yaml` - Example KISS-Matcher frame-to-frame/global registration parameters
 
-### 5.2 Nav2 参数要点
+### 5.2 Nav2 Parameter Highlights
 
-当前配置使用 **DWB** 局部规划器和 **Navfn**（Dijkstra）全局规划器。
+The current configuration uses the **DWB** local planner and the **Navfn** (Dijkstra) global planner.
 
-- **速度限制**：线速度 0.26 m/s，角速度 1.0 rad/s
-- **目标容差**：XY 0.035 m，偏航角 10&deg;
-- **局部代价地图**：6&times;6 m 滚动窗口，0.05 m 分辨率
-- **全局代价地图**：静态层 + 障碍物层 + 膨胀层（0.55 m 半径）
-- **机器人外轮廓**：0.42&times;0.39 m 矩形
+- **Velocity limits**: Linear velocity 0.26 m/s, angular velocity 1.0 rad/s
+- **Goal tolerance**: XY 0.035 m, yaw 10&deg;
+- **Local costmap**: 6&times;6 m rolling window, 0.05 m resolution
+- **Global costmap**: Static layer + obstacle layer + inflation layer (0.55 m radius)
+- **Robot footprint**: 0.42&times;0.39 m rectangle
 
-### 5.3 LIO 切换
+### 5.3 LIO Switching
 
-默认使用 FAST-LIO。切换至 Point-LIO 需在启动脚本中注释/取消注释对应行。主要差异：
+FAST-LIO is used by default. To switch to Point-LIO, comment/uncomment the corresponding lines in the launch scripts. Main differences:
 
-- **LiDAR 数据格式**：FAST-LIO 使用 `xfer_format=0`（PointCloud2）；Point-LIO 使用 `xfer_format=1`（CustomMsg）
-- **配置文件**：`mid360.yaml`（FAST-LIO）vs. `mid360_sim.yaml` / `mid360_real.yaml`（Point-LIO）
-- **lio_interface**：`fastlio_lio_interface_launch.py` 订阅 `/Odometry`；`pointlio_lio_interface_launch.py` 订阅 `/aft_mapped_to_init`
-- **仿真**：Point-LIO 需要 `ign_sim_pointcloud_tool` 注入 ring/time 字段
+- **LiDAR data format**: FAST-LIO uses `xfer_format=0` (PointCloud2); Point-LIO uses `xfer_format=1` (CustomMsg)
+- **Configuration files**: `mid360.yaml` (FAST-LIO) vs. `mid360_sim.yaml` / `mid360_real.yaml` (Point-LIO)
+- **lio_interface**: `fastlio_lio_interface_launch.py` subscribes to `/Odometry`; `pointlio_lio_interface_launch.py` subscribes to `/aft_mapped_to_init`
+- **Simulation**: Point-LIO requires `ign_sim_pointcloud_tool` to inject the ring/time fields
 
-> **注意**：`lidar_type` 枚举值在 FAST-LIO 和 Point-LIO 中定义不同，不可混用。
+> **Note**: The `lidar_type` enum values are defined differently in FAST-LIO and Point-LIO. Do not mix them.
 
-### 5.4 仿真与实机差异
+### 5.4 Simulation and Real-Robot Differences
 
-仿真模式将 Livox 硬件驱动替换为 Gazebo 射线传感器插件，使用 `get_urdf` 替代 `gld_robot_description`。LIO 管线在仿真中使用 `use_sim_time=true`；Nav2 始终使用 `false`。
+Simulation mode replaces the Livox hardware driver with the Gazebo ray-sensor plugin and uses `get_urdf` instead of `gld_robot_description`. The LIO pipeline uses `use_sim_time=true` in simulation; Nav2 always uses `false`.
 
-### 5.5 `global_relocalization_kiss_matcher` 参数
+### 5.5 `global_relocalization_kiss_matcher` Parameters
 
-`global_kiss_matcher_relocalization_exec` 的核心逻辑分两阶段：
+The core logic of `global_kiss_matcher_relocalization_exec` has two stages:
 
-1. **全局初始化**：累计 `/registered_scan`，按 `voxel_resolution` 降采样后调用 KISS-Matcher 的 `coarseToFineAlignment()`，不依赖人工初始位姿。
-2. **连续跟踪**：初始化成功后，使用 small_gicp 以上一帧结果为初值进行周期性 GICP 配准，更新并广播 `map` &rarr; `odom`。
+1. **Global initialization**: Accumulates `/registered_scan`, downsamples it using `voxel_resolution`, then calls KISS-Matcher `coarseToFineAlignment()` without requiring a manual initial pose.
+2. **Continuous tracking**: After successful initialization, uses the previous result as the initial guess for periodic small_gicp GICP registration, then updates and broadcasts `map` &rarr; `odom`.
 
-常用参数：
+Common parameters:
 
-| 参数 | 默认值 | 说明 |
+| Parameter | Default | Description |
 |------|--------|------|
-| `prior_pcd_file` | 先验 PCD 点云 | 先验 PCD 地图，必须设置为实际存在的 `.pcd` 文件 |
-| `input_cloud_topic` | `registered_scan` | 当前局部点云输入；本工作空间通常使用 `/registered_scan` |
-| `use_global_initialization` | `true` | 是否启用 KISS-Matcher 无初值初始化 |
-| `voxel_resolution` | `0.25` | KISS-Matcher 初始化阶段降采样体素大小 |
-| `global_leaf_size` | `0.25` | 全局地图 small_gicp 降采样体素大小 |
-| `registered_leaf_size` | `0.25` | 当前扫描 small_gicp 降采样体素大小 |
-| `num_threads` | `4` | small_gicp / 局部配准线程数 |
-| `num_neighbors` | `20` | 协方差估计邻居数量 |
-| `max_dist_sq` | `1.0` | GICP 对应点最大距离平方 |
-| `map_frame` | `map` | 全局地图坐标系 |
-| `odom_frame` | `odom` | LIO 里程计坐标系 |
-| `base_frame` | base_footprint | 加载地图时用于查询 `base_frame` &rarr; `lidar_frame` 静态外参 |
-| `robot_base_frame` | base_footprint | RViz `/initialpose` 修正时使用的机器人基座坐标系 |
-| `lidar_frame` | livox_frame | LiDAR 坐标系，本项目通常为 `livox_frame` |
-| `init_pose` | `[0,0,0,0,0,0]` | 可选初始位姿 `[x,y,z,roll,pitch,yaw]` |
+| `prior_pcd_file` | Prior PCD point cloud | Prior PCD map; must be set to an existing `.pcd` file |
+| `input_cloud_topic` | `registered_scan` | Current local point-cloud input; this workspace usually uses `/registered_scan` |
+| `use_global_initialization` | `true` | Whether to enable KISS-Matcher initialization without an initial guess |
+| `voxel_resolution` | `0.25` | Downsampling voxel size for the KISS-Matcher initialization stage |
+| `global_leaf_size` | `0.25` | small_gicp downsampling voxel size for the global map |
+| `registered_leaf_size` | `0.25` | small_gicp downsampling voxel size for the current scan |
+| `num_threads` | `4` | Number of small_gicp / local-registration threads |
+| `num_neighbors` | `20` | Number of neighbors for covariance estimation |
+| `max_dist_sq` | `1.0` | Maximum squared correspondence distance for GICP |
+| `map_frame` | `map` | Global map frame |
+| `odom_frame` | `odom` | LIO odometry frame |
+| `base_frame` | base_footprint | Used to query the static `base_frame` &rarr; `lidar_frame` extrinsic when loading the map |
+| `robot_base_frame` | base_footprint | Robot base frame used for RViz `/initialpose` correction |
+| `lidar_frame` | livox_frame | LiDAR frame, usually `livox_frame` in this project |
+| `init_pose` | `[0,0,0,0,0,0]` | Optional initial pose `[x,y,z,roll,pitch,yaw]` |
 
-当前 launch 文件给出的工作空间默认值为：
+Current workspace defaults in the launch file:
 
 ```text
 prior_pcd_file: /home/pio/Nav2_3D_ws/src/me_nav2_bringup/pcd/nav_test_4_27.pcd
@@ -286,53 +284,53 @@ robot_base_frame: base_footprint
 lidar_frame: livox_frame
 ```
 
-全局初始化阶段需要足够的几何重叠。机器人刚启动时可原地缓慢旋转或短距离移动，让 `/registered_scan` 累计到更完整的局部结构；初始化成功后节点会自动进入连续跟踪。
+The global initialization stage requires sufficient geometric overlap. When the robot has just started, slowly rotate in place or move a short distance so `/registered_scan` can accumulate a more complete local structure. After successful initialization, the node automatically enters continuous tracking.
 
-## 6. ROS 2 话题
+## 6. ROS 2 Topics
 
-| 话题 | 消息类型 | 发布者 |
+| Topic | Message Type | Publisher |
 |------|----------|--------|
-| `/livox/lidar` | PointCloud2 / CustomMsg | LiDAR 驱动 |
-| `/livox/imu` | sensor_msgs/Imu | LiDAR 内置 IMU |
+| `/livox/lidar` | PointCloud2 / CustomMsg | LiDAR driver |
+| `/livox/imu` | sensor_msgs/Imu | LiDAR built-in IMU |
 | `/cloud_registered` | PointCloud2 | FAST-LIO / Point-LIO |
 | `/registered_scan` | PointCloud2 | sensor_scan_generation |
 | `/odom` | Odometry | sensor_scan_generation |
 | `/scan` | LaserScan | pointcloud_to_laserscan |
 | `/cmd_vel` | Twist | Nav2 |
 | `/initialpose` | PoseWithCovarianceStamped | RViz |
-| `/plan` | Path | Nav2 规划器 |
-| `/tf` | TFMessage | LIO、sensor_scan_generation、重定位节点 |
+| `/plan` | Path | Nav2 planner |
+| `/tf` | TFMessage | LIO, sensor_scan_generation, relocalization nodes |
 
-`global_relocalization_kiss_matcher` 额外使用：
+Additional usage by `global_relocalization_kiss_matcher`:
 
-| 话题 / TF | 方向 | 说明 |
+| Topic / TF | Direction | Description |
 |-----------|------|------|
-| `/registered_scan` | 订阅 | 当前局部点云输入 |
-| `/initialpose` | 订阅 | 可选的人工位姿修正输入 |
-| `base_footprint` &rarr; `livox_frame` | 查询 | 加载先验 PCD 时对齐 LiDAR 外参 |
-| `map` &rarr; `odom` | 发布 | 输出全局重定位结果，供 Nav2 使用 |
+| `/registered_scan` | Subscribe | Current local point-cloud input |
+| `/initialpose` | Subscribe | Optional manual pose-correction input |
+| `base_footprint` &rarr; `livox_frame` | Query | Aligns the LiDAR extrinsic when loading the prior PCD |
+| `map` &rarr; `odom` | Publish | Outputs the global relocalization result for Nav2 |
 
-## 7. 常见问题
+## 7. Troubleshooting
 
-**Gazebo 无法启动** — 残留进程阻止新实例启动，手动终止：
+**Gazebo cannot start** - Stale processes may prevent a new instance from starting. Kill them manually:
 
 ```bash
 killall -9 gzserver gzclient
 ```
 
-**LIO 里程计发散** — 检查 IMU 和 LiDAR 话题是否有数据（`ros2 topic echo`），确认 `lidar_type` 与传感器匹配，检查 `use_sim_time` 设置。
+**LIO odometry diverges** - Check whether the IMU and LiDAR topics have data (`ros2 topic echo`), confirm that `lidar_type` matches the sensor, and check the `use_sim_time` setting.
 
-**TF 断开 / 代价地图空白** — 进入 `scripts/` 后使用 `./show_tf_tree.sh` 检查 TF 树，确认 `/scan` 正在发布，检查 `pointcloud_to_laserscan` 的目标坐标系是否与 LiDAR 坐标系一致。
+**TF disconnected / costmap is empty** - Enter `scripts/` and use `./show_tf_tree.sh` to inspect the TF tree, confirm `/scan` is being published, and check whether the target frame in `pointcloud_to_laserscan` matches the LiDAR frame.
 
-**重定位失败** — 确认 PCD 文件存在且非空，在 RViz 中使用 "2D Pose Estimate" 给出大致初始位姿，或尝试全局重定位方案。
+**Relocalization fails** - Confirm that the PCD file exists and is not empty. Provide an approximate initial pose in RViz with "2D Pose Estimate", or try the global relocalization option.
 
-**KISS-Matcher 全局重定位一直失败** — 检查 `/registered_scan` 是否有数据，确认 `prior_pcd_file` 指向当前环境的 PCD；确保 `base_footprint` &rarr; `livox_frame` TF 可查询；让机器人原地旋转或移动一小段距离以增加累计点云重叠；适当增大 `voxel_resolution` 可降低大地图匹配的内存压力。
+**KISS-Matcher global relocalization keeps failing** - Check whether `/registered_scan` has data, confirm that `prior_pcd_file` points to the PCD of the current environment, ensure that the `base_footprint` &rarr; `livox_frame` TF can be queried, rotate the robot in place or move a short distance to increase accumulated point-cloud overlap, and consider increasing `voxel_resolution` to reduce memory pressure for large-map matching.
 
-**TF 抖动或 Nav2 位姿跳变** — 检查是否同时运行了 `small_gicp_relocalization` 和 `global_relocalization_kiss_matcher`。同一时间只能有一个节点发布 `map` &rarr; `odom`。
+**TF jitter or Nav2 pose jumps** - Check whether `small_gicp_relocalization` and `global_relocalization_kiss_matcher` are running at the same time. Only one node may publish `map` &rarr; `odom` at once.
 
-**实机 LiDAR 无数据** — 检查网线连接，确认 `MID360_config.json` 中的 IP 地址，确认 Livox-SDK2 已安装。
+**Real LiDAR has no data** - Check the Ethernet connection, confirm the IP addresses in `MID360_config.json`, and confirm that Livox-SDK2 is installed.
 
-**构建失败** — 清理后重新构建：
+**Build fails** - Clean and rebuild:
 
 ```bash
 rm -rf build/ install/ log/
@@ -340,21 +338,21 @@ cd scripts
 ./build.sh
 ```
 
-## 8. 致谢
+## 8. Acknowledgements
 
-本项目基于以下开源项目构建：
+This project is built on the following open-source projects:
 
-- [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) — 紧耦合 LiDAR-IMU 里程计
-- [Point-LIO](https://github.com/hku-mars/Point-LIO) — 高带宽 LiDAR-IMU 里程计
-- [Nav2](https://github.com/ros-planning/navigation2) — ROS 2 导航框架
-- [small_gicp](https://github.com/koide3/small_gicp) — 高效并行化 GICP 配准
-- [KISS-Matcher](https://github.com/MIT-SPARK/KISS-Matcher) — 快速全局点云配准 (ICRA 2025)
-- [SLAM Toolbox](https://github.com/SteveMacenski/slam_toolbox) — 2D SLAM
-- [Livox SDK2](https://github.com/Livox-SDK/Livox-SDK2) — Livox LiDAR SDK
-- [Sophus](https://github.com/strasdat/Sophus) — 李群 C++ 库
+- [FAST-LIO2](https://github.com/hku-mars/FAST_LIO) - Tightly coupled LiDAR-IMU odometry
+- [Point-LIO](https://github.com/hku-mars/Point-LIO) - High-bandwidth LiDAR-IMU odometry
+- [Nav2](https://github.com/ros-planning/navigation2) - ROS 2 navigation framework
+- [small_gicp](https://github.com/koide3/small_gicp) - Efficient parallelized GICP registration
+- [KISS-Matcher](https://github.com/MIT-SPARK/KISS-Matcher) - Fast global point-cloud registration (ICRA 2025)
+- [SLAM Toolbox](https://github.com/SteveMacenski/slam_toolbox) - 2D SLAM
+- [Livox SDK2](https://github.com/Livox-SDK/Livox-SDK2) - Livox LiDAR SDK
+- [Sophus](https://github.com/strasdat/Sophus) - Lie group C++ library
 
-## 9. 许可证
+## 9. License
 
-本项目依据 [MIT License](./LICENSE) 开源。
+This project is open source under the [MIT License](./LICENSE).
 
 ---

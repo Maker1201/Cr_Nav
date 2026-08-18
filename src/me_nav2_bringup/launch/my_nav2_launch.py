@@ -1,8 +1,9 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
@@ -11,12 +12,12 @@ def generate_launch_description():
     me_share_path = get_package_share_directory('me_nav2_bringup')
 
     # 配置文件与地图路径
-    params_file = os.path.join(me_share_path, 'config', 'nav2_params.yaml')
-    map_yaml_file = os.path.join(me_share_path, 'map', 'nav_test_4_27.yaml')
+    params_file = LaunchConfiguration('params_file')
+    map_yaml_file = LaunchConfiguration('map')
+    use_sim_time = LaunchConfiguration('use_sim_time')
     rviz_file = os.path.join(me_share_path, 'rviz', 'nav2.rviz')
-    
-    # 是否使用仿真时间
-    use_sim_time = False # False 
+    default_params_file = os.path.join(me_share_path, 'config', 'nav2_params.yaml')
+    default_map_yaml_file = os.path.join(me_share_path, 'map', 'test_map__2.yaml')
 
     # 启动纯导航组件，不使用AMCL
     navigation_cmd = IncludeLaunchDescription(
@@ -25,7 +26,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'params_file': params_file,
-            'use_sim_time': str(use_sim_time),
+            'use_sim_time': use_sim_time,
             'autostart': 'True'
         }.items()
     )
@@ -66,6 +67,9 @@ def generate_launch_description():
 
     # 组合 LaunchDescription 返回
     ld = LaunchDescription()
+    ld.add_action(DeclareLaunchArgument('params_file', default_value=default_params_file))
+    ld.add_action(DeclareLaunchArgument('map', default_value=default_map_yaml_file))
+    ld.add_action(DeclareLaunchArgument('use_sim_time', default_value='true'))
     ld.add_action(navigation_cmd)
     ld.add_action(map_server_cmd)
     ld.add_action(lifecycle_manager_map_cmd)

@@ -44,7 +44,7 @@ def generate_launch_description():
                 "base_frame": "base_footprint",
                 "lidar_frame": "livox_frame",
                 "robot_base_frame": "base_footprint",
-                "prior_pcd_file": "/home/pio/Nav2_3D_ws/src/me_nav2_bringup/pcd/nav_test_4_27.pcd",
+                "prior_pcd_file": "/home/pio/Nav2_3D_ws/src/me_nav2_bringup/pcd/fast_lio_map.pcd",
                 "input_cloud_topic": "/registered_scan",
             }
         ],
