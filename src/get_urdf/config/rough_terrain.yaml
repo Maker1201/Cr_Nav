@@ -1,0 +1,161 @@
+# 粗糙地形仿真配置文件。
+# 文件路径（Docker 内）：/root/workspace/Lidar_nav2_ws/src/get_urdf/config/rough_terrain.yaml
+#
+# 单位说明：
+# - 距离单位都是 m。
+# - 角度单位都是 rad。常用值：0.0 表示沿 Gazebo X 方向；1.5708 约等于 90 度。
+# - center: [x, y] 是该区域中心点在 Gazebo 世界坐标系中的位置。
+#
+# 修改后生效方式：
+#   cd /root/workspace/Lidar_nav2_ws
+#   rm -f /tmp/lidar_nav2_rough_terrain.world
+#   ./scripts/nav2_rough_sim.sh --stop
+#   pkill -f gzserver
+#   pkill -f gzclient
+#   ./scripts/nav2_rough_sim.sh
+#
+# 调参建议：
+# - 如果新增地形和原来的墙/树/桌子穿模，不要改 3d.world，优先改本文件里的 center、width、length。
+# - 如果想让某个区域整体向右/左移动，改 center 的 x；x 增大向右，x 减小向左。
+# - 如果想让某个区域整体向上/下移动，改 center 的 y；y 增大向上，y 减小向下。
+# - 如果想重新随机生成碎石/坑洼分布，改 terrain_seed，比如 336 改成 337。
+rough_terrain:
+  # 总开关。true 表示生成粗糙地形；false 表示不生成。
+  enabled: true
+
+  # 随机种子。相同 seed 每次生成的位置一致；换一个数字会改变碎石和坑洼的随机分布。
+  terrain_seed: 336
+
+  # =========================
+  # 红色区域：完整坡
+  # =========================
+  # 每个红色坡由三段组成：上坡 + 平台 + 下坡。
+  # 这些是所有红色坡的默认参数；单个坡的位置和宽度在 ramp_areas 里改。
+
+  # 坡顶平台高度。增大后坡更高，也更难通过。
+  ramp_height_m: 0.22
+
+  # 上坡/下坡的长度。增大后坡更缓、更长；减小后坡更陡。
+  ramp_slope_length_m: 1.70
+
+  # 中间平台长度。增大后坡顶平面更长。
+  ramp_platform_length_m: 3.00
+
+  # 默认坡宽。如果某个 ramp_areas 里没有单独写 width，就使用这个值。
+  ramp_width_m: 2.15
+
+  # 坡两侧实体挡边的宽度。只影响挡边厚度，不影响坡面宽度。
+  ramp_side_wall_width_m: 0.10
+
+  # 坡两侧实体挡边的高度。增大后边缘更明显。
+  ramp_side_wall_height_m: 0.18
+
+  # 各个红色坡的位置。
+  # center: [x, y] 是整组坡（上坡+平台+下坡）的中心点。
+  # yaw 控制坡的方向：
+  #   0.0：沿 X 方向布置，上坡/下坡在左右方向。
+  #   1.5708：沿 Y 方向布置，上坡/下坡在上下方向。
+  # width 是这个坡的实际宽度。
+  #
+  # 避免穿模的修改方法：
+  # - 和横向墙穿模：通常改 center 的 y 或减小 width。
+  # - 和纵向墙穿模：通常改 center 的 x 或减小 width。
+  # - 坡长度不合适：改 ramp_slope_length_m 或 ramp_platform_length_m。
+  ramp_areas:
+    # 上方外侧坡。若压到最上方绿色墙，减小 y；若离墙太远，增大 y。
+    top_outer: {center: [-1.2, 13.20], yaw: 0.0, width: 3.25}
+
+    # 上方内侧坡。若压到中间横墙，减小 y；若离墙太远，增大 y。
+    top_inner: {center: [-0.55, 9.00], yaw: 0.0, width: 3.20}
+
+    # 右侧坡。若压到右侧绿色墙，减小 x；若离墙太远，增大 x。
+    right_side: {center: [16.00, 4.2], yaw: 1.5708, width: 5.25}
+
+    # 左下角坡。若压到左侧墙，调整 x；若压到底部墙，调整 y。
+    left_bottom: {center: [-12.90, -10.0], yaw: 1.5708, width: 3.05}
+
+  # =========================
+  # 绿色区域：碎石
+  # =========================
+  # 碎石只在下面的矩形范围内随机生成。
+  # 范围由 x_min/x_max/y_min/y_max 控制，不会自动避开墙体；如果碰到墙或树，就缩小范围。
+  gravel_area:
+    # 碎石区域左边界/右边界。想让碎石区域更宽，减小 x_min_m 或增大 x_max_m。
+    x_min_m: -4.6
+    x_max_m: 4.8
+
+    # 碎石区域下边界/上边界。想让碎石区域更高，减小 y_min_m 或增大 y_max_m。
+    y_min_m: -3.6
+    y_max_m: 4.2
+
+    # 机器人初始点附近的空白半径，避免一出生就压在碎石上。
+    avoid_spawn_radius_m: 0.90
+
+    # 低/中/高三类碎石数量。
+    # low：低于车轮附近，通常用于测试可越过的小碎石。
+    # mid：接近车体/轮高，用于测试困难通过。
+    # high：高于车体或明显障碍，用于测试避障。
+    # 想让碎石更稀疏：减少 count，或增大 min_stone_distance_m。
+    low_count: 22
+    mid_count: 10
+    high_count: 5
+
+    # 碎石之间的最小中心距离。增大后更分散；减小后更密集。
+    min_stone_distance_m: 0.32
+
+    # 各类碎石高度范围。实际高度会在范围内随机取值。
+    low_height_range_m: [0.015, 0.070]
+    mid_height_range_m: [0.090, 0.160]
+    high_height_range_m: [0.220, 0.360]
+
+    # 碎石半径范围。增大会让单个碎石更粗。
+    radius_range_m: [0.035, 0.100]
+
+  # =========================
+  # 黄色区域：带坑洼的平台坡
+  # =========================
+  # 黄色区域整体也是一个完整坡：前段上坡 + 中间平台 + 后段下坡。
+  # 坑洼只生成在中间平台上，坑底比平台低 pit_depth_m。
+  pit_area:
+    # 整个黄色坑洼坡的中心点。
+    # 若黄色平台压到上方横墙，减小 y；若压到底部墙，增大 y。
+    # 若压到左右模型，调整 x 或减小 platform_length_m。
+    center: [4.2, -11.50]
+
+    # 黄色坡方向。0.0 表示上坡/下坡沿 X 方向；1.5708 表示沿 Y 方向。
+    yaw: 0.0
+
+    # 中间坑洼平台长度。不包括前后上下坡。
+    platform_length_m: 10.2
+
+    # 中间坑洼平台宽度。增大后区域更宽，但更容易碰到墙。
+    width_m: 5.4
+
+    # 平台离地高度。增大后上坡更高，坑洼整体也更高。
+    platform_height_m: 0.12
+
+    # 前后上坡/下坡长度。增大后坡更缓；减小后坡更陡。
+    slope_length_m: 1.45
+
+    # 坑深。当前 0.05m 表示坑底比平台低 5cm。
+    pit_depth_m: 0.05
+
+    # 坑洼数量。数量越多，越容易放不下或距离太近。
+    pit_count: 7
+
+    # 坑洼中心之间的最小距离。
+    # 你要求坑洼之间距离大于 2 倍车长；如果实测车长变了，就把这里改成 2 * 车长以上。
+    # 例如车长 0.45m，则建议设置为 0.90 或更大。
+    min_pit_center_distance_m: 0.90
+
+    # 单个坑洼长度/宽度随机范围。
+    # 增大范围会出现更大的坑；减小范围会让坑更小。
+    pit_length_range_m: [0.45, 1.10]
+    pit_width_range_m: [0.30, 0.70]
+
+    # 黄色坡和平台两侧实体挡边参数。
+    side_wall_width_m: 0.08
+    side_wall_height_m: 0.16
+
+    # 坑洼四周实体边界厚度。增大后坑边更厚，但占用平台空间更多。
+    pothole_wall_thickness_m: 0.045

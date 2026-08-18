@@ -2,6 +2,9 @@
 build/
 install/
 log/
+build_rough/
+install_rough/
+log_rough/
 __pycache__/
 *.o
 # *.so

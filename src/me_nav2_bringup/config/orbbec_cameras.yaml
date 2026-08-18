@@ -1,0 +1,45 @@
+# Dual Orbbec Gemini 336L configuration.
+# Units: meters / radians. Robot base frame: base_footprint, x forward, y left, z up.
+#
+# How to identify real cameras later:
+#   1. Connect one camera at a time and run:
+#        source install/setup.bash
+#        ros2 run orbbec_camera list_devices_node
+#   2. Connect both cameras and run:
+#        lsusb -t
+#        ros2 topic list | grep orbbec
+#        ros2 topic hz /orbbec_front/depth/points
+#   3. Cover one camera by hand and watch RViz or topic activity. If front/rear
+#      are swapped, exchange serial_number values between front and rear.
+#
+# usb_port means the Linux USB topology path, such as 2-1.3 or 2-1.4. It is
+# not a /dev/ttyUSB* name and not a normal file path. It may change when you
+# move the cable or hub. Prefer serial_number when the real cameras are ready.
+# These usb_port values are examples so the launch/config shape is complete.
+
+orbbec_cameras:
+  front:
+    camera_name: orbbec_front
+    serial_number: ""      # Example after testing: "CP3XXXXXXXX"
+    usb_port: "2-1.3"      # Example only: check with lsusb -t / Orbbec logs.
+    parent_frame: base_footprint
+    link_frame: orbbec_front_link
+    depth_frame: orbbec_front_depth_optical_frame
+    xyz: [0.32, 0.0, 0.35]
+    rpy: [0.0, 0.52, 0.0]  # Suggested: pitch down about 30 degrees.
+    depth_points_topic: /orbbec_front/depth/points
+    depth_image_topic: /orbbec_front/depth/image_raw
+    camera_info_topic: /orbbec_front/depth/camera_info
+
+  rear:
+    camera_name: orbbec_rear
+    serial_number: ""      # Fill after testing. Swap with front if reversed.
+    usb_port: "2-1.4"      # Example only.
+    parent_frame: base_footprint
+    link_frame: orbbec_rear_link
+    depth_frame: orbbec_rear_depth_optical_frame
+    xyz: [-0.32, 0.0, 0.35]
+    rpy: [0.0, 0.52, 3.14159]  # Yaw 180 degrees, pitch down about 30 degrees.
+    depth_points_topic: /orbbec_rear/depth/points
+    depth_image_topic: /orbbec_rear/depth/image_raw
+    camera_info_topic: /orbbec_rear/depth/camera_info

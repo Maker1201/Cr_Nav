@@ -1,0 +1,33 @@
+terrain_perception:
+  ros__parameters:
+    use_sim_time: false
+    base_frame: base_footprint
+
+    front_points_topic: /orbbec_front/depth/points
+    rear_points_topic: /orbbec_rear/depth/points
+    terrain_scan_topic: /terrain_scan
+    terrain_obstacles_topic: /terrain_obstacles
+
+    # Unknown real-vehicle capability: keep conservative, then update after tests.
+    max_drop_depth_m: 0.05
+    max_step_height_m: 0.04
+    max_slope_deg: 10.0
+
+    # Ignore tiny clusters/noise. Increase if camera noise creates false obstacles.
+    min_obstacle_points: 4
+
+    # Near-field regions watched by the front and rear cameras in base_footprint.
+    front_roi_x_min_m: 0.05
+    front_roi_x_max_m: 1.40
+    rear_roi_x_min_m: -1.40
+    rear_roi_x_max_m: -0.05
+    roi_y_abs_m: 0.55
+    roi_z_min_m: -0.35
+    roi_z_max_m: 0.85
+
+    scan_angle_min_rad: -3.14159
+    scan_angle_max_rad: 3.14159
+    scan_angle_increment_rad: 0.01745
+    scan_range_min_m: 0.05
+    scan_range_max_m: 3.0
+    publish_rate_hz: 10.0
