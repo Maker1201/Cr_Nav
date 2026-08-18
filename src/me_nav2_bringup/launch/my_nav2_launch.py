@@ -69,7 +69,7 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(DeclareLaunchArgument('params_file', default_value=default_params_file))
     ld.add_action(DeclareLaunchArgument('map', default_value=default_map_yaml_file))
-    ld.add_action(DeclareLaunchArgument('use_sim_time', default_value='true'))
+    ld.add_action(DeclareLaunchArgument('use_sim_time', default_value='false'))
     ld.add_action(navigation_cmd)
     ld.add_action(map_server_cmd)
     ld.add_action(lifecycle_manager_map_cmd)

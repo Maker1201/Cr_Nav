@@ -104,12 +104,12 @@ run_task() {
 # 可能会导致 /cmd_vel 话题被占用：GUI 控制小车
 run_task "GUI控制" "ros2 run gui_teleop gui_teleop_node"
 run_task "FAST-LIO 里程计" "ros2 launch fast_lio mapping.launch.py use_sim_time:=true rviz:=false"
-run_task "lio_interface" "ros2 launch lio_interface lio_interface_launch.py"
+run_task "lio_interface" "ros2 launch lio_interface lio_interface_launch.py use_sim_time:=true"
 run_task "Gazebo 仿真" "killall -9 gzserver gzclient 2>/dev/null || true; ros2 launch get_urdf get_urdf_launch.py rviz:=false"
-run_task "sensor_scan_generation" "ros2 launch sensor_scan_generation sensor_scan_generation_launch.py"
-run_task "3d点云转2d" "ros2 launch me_nav2_bringup pointcloud_to_laserscan_launch.py"
+run_task "sensor_scan_generation" "ros2 launch sensor_scan_generation sensor_scan_generation_launch.py use_sim_time:=true"
+run_task "3d点云转2d" "ros2 launch me_nav2_bringup pointcloud_to_laserscan_launch.py use_sim_time:=true"
 run_task "slam_toolbox 建图" "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=$WORKSPACE_ROOT/src/me_nav2_bringup/config/slam_toolbox_params.yaml"
-run_task "Nav2 导航" "ros2 launch me_nav2_bringup my_nav2_launch.py"
+run_task "Nav2 导航" "ros2 launch me_nav2_bringup my_nav2_launch.py use_sim_time:=true"
 
 if [ "$USE_TERMINAL" -eq 0 ]; then
   echo "All processes started. Press Ctrl-C to stop them."

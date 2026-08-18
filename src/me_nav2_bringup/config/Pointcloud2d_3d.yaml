@@ -10,4 +10,4 @@ Pointcloud2d_3d:
     scan_time: 0.1
     range_min: 0.05     # 最小有效距离（米）
     range_max: 70.0    # 最大有效距离（米）
-    use_sim_time: true
+    use_sim_time: false

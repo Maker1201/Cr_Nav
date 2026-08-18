@@ -111,12 +111,12 @@ if [ "$ENABLE_TELEOP" -eq 1 ]; then
   run_task "GUI控制" "ros2 run gui_teleop gui_teleop_node"
 fi
 run_task "FAST-LIO 里程计" "ros2 launch fast_lio mapping.launch.py use_sim_time:=true rviz:=false"
-run_task "lio_interface" "ros2 launch lio_interface lio_interface_launch.py"
+run_task "lio_interface" "ros2 launch lio_interface lio_interface_launch.py use_sim_time:=true"
 run_task "Gazebo 仿真" "killall -9 gzserver gzclient 2>/dev/null || true; ros2 launch get_urdf get_urdf_launch.py rviz:=false"
-run_task "sensor_scan_generation" "ros2 launch sensor_scan_generation sensor_scan_generation_launch.py"
-run_task "3d点云转2d" "ros2 launch me_nav2_bringup pointcloud_to_laserscan_launch.py"
-run_task "KISS + GICP 重定位" "ros2 launch global_relocalization_kiss_matcher global_kiss_matcher_relocalization_launch.py"
-run_task "Nav2 导航" "ros2 launch me_nav2_bringup my_nav2_launch.py"
+run_task "sensor_scan_generation" "ros2 launch sensor_scan_generation sensor_scan_generation_launch.py use_sim_time:=true"
+run_task "3d点云转2d" "ros2 launch me_nav2_bringup pointcloud_to_laserscan_launch.py use_sim_time:=true"
+run_task "KISS + GICP 重定位" "ros2 launch global_relocalization_kiss_matcher global_kiss_matcher_relocalization_launch.py loop_overlap_threshold:=5.0"
+run_task "Nav2 导航" "ros2 launch me_nav2_bringup my_nav2_launch.py use_sim_time:=true"
 
 if [ "$USE_TERMINAL" -eq 0 ]; then
   echo "All processes started. Press Ctrl-C to stop them."
